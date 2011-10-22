@@ -2,7 +2,7 @@
 
 define(R8_DB_HOST, "localhost");
 define(R8_DB_USER, "invocare_r8");
-define(R8_DB_PASS, "invocare_r8");
+define(R8_DB_PASS, "");
 define(R8_DB_NAME, "invocare_r8");
 
 class r8DB {
