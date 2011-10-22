@@ -16,9 +16,6 @@
     throw new Exception($errorStr);
   }
 
-//  $query = "select s.initials, s.longname, s.score, r.createdAt from
-// Scores s join Runs r on r.id=s.runId where s.runId = (select id from
-// Runs order by id desc limit 1)";
 $query = "select s.initials, s.longname, s.score, r.createdAt, (select date_add(date(sr.createdAt),interval -1 day) from Scores ss join Runs sr on sr.id = ss.runId where ss.initials = s.initials  and ss.score = s.score order by sr.id limit 1) as 'setAt' from Scores s join Runs r on r.id=s.runId where s.runId = (select id from Runs order by id desc limit 1)";
   $sqlResult = $conn->query($query);
   if (empty($sqlResult)) {
@@ -39,10 +36,13 @@ $query = "select s.initials, s.longname, s.score, r.createdAt, (select date_add(
       <th scope="col">Long Name</th>
       <th scope="col">Score</th>
       <th scope="col">Date set</th>
+      <th scope="col">Set last week</th>
+      <th scope="col">Set yesterday</th>
     </tr>
 <?php
   $i = 0;
   $sqlResult->data_seek(0);
+  $today = new DateTime();
   while ($row = $sqlResult->fetch_assoc()) {
     echo "<tr>";
 	echo "<td>" . ++$i . "</td>";
@@ -50,6 +50,10 @@ $query = "select s.initials, s.longname, s.score, r.createdAt, (select date_add(
 	echo "<td>" . $row['longname'] . "</td>";
 	echo "<td>" . $row['score'] . "</td>";
 	echo "<td>" . $row['setAt'] . "</td>";
+    $setAt = new DateTime($row['setAt']);
+    $dayDiff = $today->diff($setAt)->d;
+	echo "<td style='text-align: center'>" . ($dayDiff < 7 ? "XXX" : "") . "</td>";    
+	echo "<td style='text-align: center'>" . ($dayDiff == 1 ? "XXX" : "") . "</td>";    
 	echo "</tr>";
   }
 
