@@ -7,13 +7,19 @@
 <body>
   <h1>Robotron</h1>
 <?php
+  // error_reporting(E_ALL);
+  require_once('../sql.php');
+
   $conn = mysqli_init();
-  if (!$conn->real_connect("localhost", "invocare_r8", "invocare_r8", "invocare_r8", 3306)) {
+  if (!$conn->real_connect(R8_DB_HOST, R8_DB_USER, R8_DB_PASS, R8_DB_NAME, 3306)) {
     $errorStr = "Failed to connect to DB, err no: " . mysqli_connect_errno();
     throw new Exception($errorStr);
   }
 
-  $query = "select s.initials, s.longname, s.score, r.createdAt from Scores s join Runs r on r.id=s.runId where s.runId = (select id from Runs order by id desc limit 1)";
+//  $query = "select s.initials, s.longname, s.score, r.createdAt from
+// Scores s join Runs r on r.id=s.runId where s.runId = (select id from
+// Runs order by id desc limit 1)";
+$query = "select s.initials, s.longname, s.score, r.createdAt, (select date_add(date(sr.createdAt),interval -1 day) from Scores ss join Runs sr on sr.id = ss.runId where ss.initials = s.initials  and ss.score = s.score order by sr.id limit 1) as 'setAt' from Scores s join Runs r on r.id=s.runId where s.runId = (select id from Runs order by id desc limit 1)";
   $sqlResult = $conn->query($query);
   if (empty($sqlResult)) {
     $errorStr = "T8: Failed to query scores: err: " . $conn->error;
@@ -32,6 +38,7 @@
       <th scope="col">Initials</th>
       <th scope="col">Long Name</th>
       <th scope="col">Score</th>
+      <th scope="col">Date set</th>
     </tr>
 <?php
   $i = 0;
@@ -42,6 +49,7 @@
 	echo "<td>" . $row['initials'] . "</td>";
 	echo "<td>" . $row['longname'] . "</td>";
 	echo "<td>" . $row['score'] . "</td>";
+	echo "<td>" . $row['setAt'] . "</td>";
 	echo "</tr>";
   }
 

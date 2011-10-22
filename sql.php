@@ -1,9 +1,6 @@
 <?php
 
-define(R8_DB_HOST, "localhost");
-define(R8_DB_USER, "invocare_r8");
-define(R8_DB_PASS, "");
-define(R8_DB_NAME, "invocare_r8");
+require_once('sql_config.php');
 
 class r8DB {
 	public static function createRun() {
