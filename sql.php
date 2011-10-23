@@ -24,6 +24,12 @@ class r8DB {
 		$sqlResult = $this->query($query);
 		return $sqlResult;		
 	}
+
+	public function getScoreChartData() {
+		$query = "select r.id, date_add(date(r.createdAt), interval -1 day) as 'day', (select s.initials from Scores s where s.runId = r.id order by s.score desc limit 1) as 'topInitial', (select s.score from Scores s where s.runId = r.id order by s.score desc limit 1) as 'topScore', (select s.initials from Scores s where s.runId = r.id order by s.score asc limit 1) as 'lowInitial', (select s.score from Scores s where s.runId = r.id order by s.score asc limit 1) as 'lowScore' from Runs r";
+		$sqlResult = $this->query($query);
+		return $sqlResult;
+	}
 	
 	public function createRun() {
 		$escName = $this->conn->real_escape_string($name);
