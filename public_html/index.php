@@ -1,18 +1,77 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Robotron</title>
-  </head>
-<body>
-  <h1>Robotron</h1>
 <?php
   // error_reporting(E_ALL);
   require_once('../sql.php');
 
   $ds = new r8DB();
+  $chartData = $ds->getScoreChartData();
+  $topScores = "";
+  $botScores = "";
+  $startDate = "";
+  if ($chartData->num_rows > 0) {
+    $topScores = "[";
+    $botScores = "[";
+    $i = 0;
+    while ($row = $chartData->fetch_assoc()) {
+      if ($i == 0) {
+        $startDate = $row["day"];
+      }
+      $topScores .= $row["topScore"];
+      $botScores .= $row["lowScore"];
+      if ($i < $chartData->num_rows - 1) {
+        $topScores .= ",";
+        $botScores .= ",";
+      }
+      $i++;
+    }
+    $topScores .= "]";
+    $botScores .= "]";
+  }
+?>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Robotron</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript"></script>
+    <script src="js/highcharts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      var chart1; // globally available
+      $(document).ready(function() {
+      chart1 = new Highcharts.Chart({
+        chart: {
+           renderTo: 'container',
+           type: 'line'
+        },
+        title: {
+           text: 'Leaderboard (high and low)'
+        },
+        xAxis: {
+           type: 'datetime'           
+        },
+        yAxis: {
+           title: {
+              text: 'Score'
+           }
+        },
+        series: [{
+           name: 'High',
+           pointInterval: 24 * 3600 * 1000, // one day
+           pointStart: Date.parse('<?php echo "$startDate"; ?>'),
+           data: <?php echo "$topScores"; ?>
+        },{
+           name: 'Low',
+           pointInterval: 24 * 3600 * 1000, // one day
+           pointStart: Date.parse('<?php echo "$startDate"; ?>'),
+           data: <?php echo "$botScores"; ?>
+        }]
+     });
+  });
+   </script>
+  </head>
+<body>
+  <h1>Robotron</h1>
+<?php
   $sqlResult = $ds->getLeaderboardData();
-
   $row = $sqlResult->fetch_assoc();
   $date = new DateTime($row['createdAt'], new DateTimeZone('America/New_York'));
   date_default_timezone_set('America/Los_Angeles');
@@ -49,6 +108,7 @@
 
 ?>
   </table>
+  <div id="container" style="width: 100%; height: 400px"></div>
  <h2>Stats</h2>
   <ul>
 <?php
