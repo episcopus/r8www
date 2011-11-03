@@ -30,6 +30,18 @@ class r8DB {
 		$sqlResult = $this->query($query);
 		return $sqlResult;
 	}
+
+	public function getPtmChartData() {
+		$query = "select r.id as 'runId', IF(cast((a.ptm - v.ptm) as signed) >= 0, a.ptm - v.ptm, a.ptm) as 'delta' from (select id, ptm, (select count(id) from Stats s where s.id <= l.id) as 'ranking' from Stats l) v left join (select id, ptm, runId, (select count(id) from Stats s where s.id <= l.id) as 'ranking' from Stats l) a on (a.ranking = v.ranking + 1) left join Runs r on r.id = a.runId where a.id is not null order by r.createdAt asc";
+		$sqlResult = $this->query($query);
+		$result = array();
+
+		while ($row = $sqlResult->fetch_assoc()) {
+			$result[$row["runId"]] = $row["delta"];
+		}
+
+		return $result;
+	}
 	
 	public function createRun() {
 		$escName = $this->conn->real_escape_string($name);

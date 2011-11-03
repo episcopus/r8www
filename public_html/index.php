@@ -7,12 +7,15 @@
 
   $ds = new r8DB();
   $chartData = $ds->getScoreChartData();
+  $ptmData = $ds->getPtmChartData();
   $topScores = "";
   $botScores = "";
+  $ptm = "";
   $startDate = "";
   if ($chartData->num_rows > 0) {
     $topScores = "[";
     $botScores = "[";
+    $ptm = "[";
     $i = 0;
     while ($row = $chartData->fetch_assoc()) {
       if ($i == 0) {
@@ -20,14 +23,18 @@
       }
       $topScores .= $row["topScore"];
       $botScores .= $row["lowScore"];
+      $min = isset($ptmData[$row["id"]]) ? $ptmData[$row["id"]] : 0;
+      $ptm .= $min;
       if ($i < $chartData->num_rows - 1) {
         $topScores .= ",";
         $botScores .= ",";
+        $ptm .= ",";
       }
       $i++;
     }
     $topScores .= "]";
     $botScores .= "]";
+    $ptm .= "]";
   }
 ?>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -39,30 +46,46 @@
       $(document).ready(function() {
       chart1 = new Highcharts.Chart({
         chart: {
-           renderTo: 'container',
-           type: 'line'
+           renderTo: 'container'
         },
         title: {
            text: 'Leaderboard (high and low)'
         },
         xAxis: {
-           type: 'datetime'           
+           type: 'datetime',
+           title: {
+             text: 'Date'
+           }
         },
-        yAxis: {
+        yAxis: [{
            title: {
               text: 'Score'
            }
-        },
+        }, {
+           title: {
+              text: 'Minutes played'
+           },
+           opposite: true
+        }],
         series: [{
            name: 'High',
            pointInterval: 24 * 3600 * 1000, // one day
            pointStart: Date.parse('<?php echo "$startDate"; ?>'),
-           data: <?php echo "$topScores"; ?>
+           data: <?php echo "$topScores"; ?>,
+           type: 'line'
         },{
            name: 'Low',
            pointInterval: 24 * 3600 * 1000, // one day
            pointStart: Date.parse('<?php echo "$startDate"; ?>'),
-           data: <?php echo "$botScores"; ?>
+           data: <?php echo "$botScores"; ?>,
+           type: 'line'
+        },{
+           name: 'Minutes played',
+           pointInterval: 24 * 3600 * 1000, // one day
+           pointStart: Date.parse('<?php echo "$startDate"; ?>'),
+           data: <?php echo "$ptm"; ?>,
+           type: 'column',
+           yAxis: 1
         }]
      });
   });
@@ -76,7 +99,7 @@
   $date = new DateTime($row['createdAt'], new DateTimeZone('America/New_York'));
   date_default_timezone_set('America/Los_Angeles');
   $dateString = strftime("%c", $date->getTimestamp());
-  echo "<p>Last updated: $dateString</p>"
+  echo "<p>Last updated: $dateString</p>";
 ?>
  <table>
     <tr>
